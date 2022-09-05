@@ -1,4 +1,4 @@
-package com.dm.spring.parking_lot_project;
+package com.parkinglot.manage;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
