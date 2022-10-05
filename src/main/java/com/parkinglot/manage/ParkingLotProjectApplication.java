@@ -1,4 +1,4 @@
-package com.dm.spring.parking_lot_project;
+package com.parkinglot.manage;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
