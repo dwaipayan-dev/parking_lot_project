@@ -2,6 +2,8 @@ package com.parkinglot.manage.Admin;
 
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,11 +14,12 @@ import org.springframework.stereotype.Service;
 /**
  * AdminUserDetailsService
  */
-
 @Service
 public class AdminUserDetailsService implements UserDetailsService {
     @Autowired
     private AdminRepository adminRepo;
+
+    private static final Logger logger = LoggerFactory.getLogger(AdminUserDetailsService.class);
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -27,6 +30,7 @@ public class AdminUserDetailsService implements UserDetailsService {
             Admin admin = queryResult.get();
             UserDetails adminDetails = User.withUsername(admin.getName()).password(admin.getPwdHash())
                     .authorities("ADMIN").build();
+            logger.info("UserNAME Is: " + username);
             return adminDetails;
         }
     }
