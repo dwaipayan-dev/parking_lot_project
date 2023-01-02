@@ -1,9 +1,10 @@
 package com.parkinglot.manage.Admin;
 
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.parkinglot.manage.RequestModel.JwtRequest;
+import com.parkinglot.manage.ResponseModel.JwtResponse;
+import com.parkinglot.manage.Utilities.JwtUtilities.JwtUtil;
 
 @CrossOrigin(origins = "http://localhost:8081")
 @RestController
@@ -23,6 +28,12 @@ public class AdminController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtUtil jwtTokenUtil;
+
+    @Autowired
+    private AdminUserDetailsService adminUserDetailsService;
+
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     @GetMapping("/")
@@ -32,29 +43,19 @@ public class AdminController {
     }
 
     @PostMapping("/signup")
-    public boolean signup(@RequestBody Map<String, Object> request) {
-        System.out.println(request.get("name"));
-        System.out.println(request.get("password"));
-        String userName = (String) (request.get("name"));
-        String pwdEncoded = passwordEncoder.encode((String) (request.get("password")));
+    public boolean signup(@RequestBody JwtRequest request) {
+        System.out.println(request.getUsername());
+        System.out.println(request.getPassword());
+        String userName = request.getUsername();
+        String pwdEncoded = passwordEncoder.encode(request.getPassword());
         boolean queryResult = adminService.createAdmin(userName, pwdEncoded);
         return queryResult;
     }
 
     @PostMapping("/login")
-    public boolean login(@RequestBody Map<String, Object> request) {
-        // long id = (long) request.get("id");
-        // String password = (String) request.get("password");
-        // Optional<Admin> queryResult = adminService.findAdminById(id);
-        // if (!queryResult.isPresent()) {
-        // return false;
-        // } else {
-        // String pwdEncoded = queryResult.get().getPwdHash();
-        // if (passwordEncoder.matches(password, pwdEncoded) == true) {
-        // return true;
-        // }
-        // return false;
-        // }
-        return false;
+    public ResponseEntity<?> login(@RequestBody JwtRequest request) {
+        final UserDetails userDetails = adminUserDetailsService.loadUserByUsername(request.getUsername());
+        final String token = jwtTokenUtil.generateToken(userDetails);
+        return ResponseEntity.ok(new JwtResponse(token));
     }
 }
