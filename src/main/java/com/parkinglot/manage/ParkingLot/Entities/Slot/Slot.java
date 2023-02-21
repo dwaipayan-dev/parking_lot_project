@@ -7,9 +7,13 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+
 import com.parkinglot.manage.ParkingLot.Enums.SlotStatus;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(name = "rowColumn", columnNames = { "row_no", "col_no" }))
 public class Slot {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -32,7 +36,7 @@ public class Slot {
         this.row = row;
         this.col = col;
         // default status
-        this.status = SlotStatus.EMPTY;
+        this.status = SlotStatus.UNAVAILABLE;
     }
 
     public Long getId() {
