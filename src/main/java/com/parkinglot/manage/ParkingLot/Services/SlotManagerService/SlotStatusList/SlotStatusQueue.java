@@ -7,10 +7,11 @@ import com.parkinglot.manage.CustomDS.DLListQueue.DLListQueue;
 import com.parkinglot.manage.CustomDS.DLListQueue.Node;
 import com.parkinglot.manage.ParkingLot.Entities.Slot.Slot;
 import com.parkinglot.manage.ParkingLot.Enums.SlotStatus;
+import com.parkinglot.manage.ParkingLot.Services.SlotManagerService.SlotCacheNode.SlotCacheNode;
 
 public class SlotStatusQueue implements SlotStatusList {
-    Map<String, Node<SlotStatus>> nodeMap;
-    Map<String, DLListQueue<SlotStatus>> statusMap;
+    Map<String, Node<SlotCacheNode>> nodeMap;
+    Map<String, DLListQueue<SlotCacheNode>> statusMap;
 
     public SlotStatusQueue() {
         nodeMap = new ConcurrentHashMap<>();
@@ -23,12 +24,12 @@ public class SlotStatusQueue implements SlotStatusList {
         // used to reference the node stored
         // in statusMap statusqueue during removal. The add() is made thread safe to
         // support concurrent operations.
-        Node<SlotStatus> newNode = new Node<>(SlotStatus.valueOf(status));
+        Node<SlotCacheNode> newNode = new Node<>(new SlotCacheNode(row, col, SlotStatus.valueOf(status)));
         String key = row + "r" + col + "c";
-        nodeMap.put(key, newNode);
-        DLListQueue<SlotStatus> newQueue = statusMap.get(status);
+        DLListQueue<SlotCacheNode> newQueue = statusMap.get(status);
         synchronized (this) {
             newQueue.add(newNode);
+            nodeMap.put(key, newNode);
         }
     }
 
@@ -39,11 +40,13 @@ public class SlotStatusQueue implements SlotStatusList {
         String[] dims = slotKey.split("[rc]+");
         int row = Integer.parseInt(dims[0]);
         int col = Integer.parseInt(dims[1]);
-        Node<SlotStatus> currNode = nodeMap.get(slotKey);
-        SlotStatus currStatus = currNode.getVal();
-        DLListQueue<SlotStatus> oldQueue = statusMap.get(currStatus.toString());
+        Node<SlotCacheNode> currNode = nodeMap.get(slotKey);
+        SlotStatus currStatus = currNode.getVal().getStatus();
+        DLListQueue<SlotCacheNode> oldQueue = statusMap.get(currStatus.toString());
+        // Remove from nodemap as well to avoid stale read
         synchronized (this) {
             oldQueue.remove(currNode);
+            nodeMap.remove(slotKey);
         }
         Slot result = new Slot(row, col);
         return result;
@@ -51,9 +54,18 @@ public class SlotStatusQueue implements SlotStatusList {
 
     @Override
     public Slot removeLast(String status) {
-        // Problem is that DLListQueue would only return slotstatus which would provide
-        // no information on row and column
-        return null;
+        DLListQueue<SlotCacheNode> oldQueue = statusMap.get(status);
+        SlotCacheNode topNode = null;
+        int row = 0, col = 0;
+        synchronized (this) {
+            topNode = oldQueue.removeLast().getVal();
+            row = topNode.getRow();
+            col = topNode.getCol();
+            String slotKey = row + "r" + col + "c";
+            nodeMap.remove(slotKey);
+        }
+        Slot result = new Slot(row, col);
+        return result;
     }
 
     public Slot removeLastEmpty() {
