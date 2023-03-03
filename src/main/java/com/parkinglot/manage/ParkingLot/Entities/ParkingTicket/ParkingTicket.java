@@ -23,7 +23,7 @@ public class ParkingTicket {
     @Column(name = "start_time")
     private Date startTime;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "slot_id")
     private Slot slot;
 
@@ -61,10 +61,6 @@ public class ParkingTicket {
 
     public void setSlot(Slot slot) {
         this.slot = slot;
-    }
-
-    public ParkingTicket(Vehicle vehicle) {
-        this.vehicle = vehicle;
     }
 
     public Vehicle getVehicle() {

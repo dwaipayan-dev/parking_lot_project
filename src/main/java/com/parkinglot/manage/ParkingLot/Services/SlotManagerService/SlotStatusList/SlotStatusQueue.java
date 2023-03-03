@@ -10,12 +10,23 @@ import com.parkinglot.manage.ParkingLot.Enums.SlotStatus;
 import com.parkinglot.manage.ParkingLot.Services.SlotManagerService.SlotCacheNode.SlotCacheNode;
 
 public class SlotStatusQueue implements SlotStatusList {
-    Map<String, Node<SlotCacheNode>> nodeMap;
-    Map<String, DLListQueue<SlotCacheNode>> statusMap;
+    private Map<String, Node<SlotCacheNode>> nodeMap;
+    private Map<String, DLListQueue<SlotCacheNode>> statusMap;
 
     public SlotStatusQueue() {
         nodeMap = new ConcurrentHashMap<>();
         statusMap = new ConcurrentHashMap<>();
+        statusMap.put("EMPTY", new DLListQueue<SlotCacheNode>());
+        statusMap.put("OCCUPIED", new DLListQueue<SlotCacheNode>());
+        statusMap.put("GATE", new DLListQueue<SlotCacheNode>());
+        statusMap.put("UNAVAILABLE", new DLListQueue<SlotCacheNode>());
+
+    }
+
+    @Override
+    public boolean checkIfEntryPresent(int row, int col) {
+        String key = SlotStatusList.createSlotKey(row, col);
+        return nodeMap.containsKey(key);
     }
 
     @Override
@@ -25,7 +36,7 @@ public class SlotStatusQueue implements SlotStatusList {
         // in statusMap statusqueue during removal. The add() is made thread safe to
         // support concurrent operations.
         Node<SlotCacheNode> newNode = new Node<>(new SlotCacheNode(row, col, SlotStatus.valueOf(status)));
-        String key = row + "r" + col + "c";
+        String key = SlotStatusList.createSlotKey(row, col);
         DLListQueue<SlotCacheNode> newQueue = statusMap.get(status);
         synchronized (this) {
             newQueue.add(newNode);
@@ -61,15 +72,15 @@ public class SlotStatusQueue implements SlotStatusList {
             topNode = oldQueue.removeLast().getVal();
             row = topNode.getRow();
             col = topNode.getCol();
-            String slotKey = row + "r" + col + "c";
+            String slotKey = SlotStatusList.createSlotKey(row, col);
             nodeMap.remove(slotKey);
         }
         Slot result = new Slot(row, col);
         return result;
     }
 
-    public Slot removeLastEmpty() {
-        return removeLast("EMPTY");
-    }
+    // public Slot removeLastEmpty() {
+    // return removeLast("EMPTY");
+    // }
 
 }
