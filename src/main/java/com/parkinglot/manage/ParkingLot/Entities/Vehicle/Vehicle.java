@@ -4,8 +4,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import com.parkinglot.manage.ParkingLot.Enums.VehicleType;
@@ -13,7 +11,8 @@ import com.parkinglot.manage.ParkingLot.Enums.VehicleType;
 @Entity
 public class Vehicle {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // @GeneratedValue(strategy = GenerationType.AUTO)
+    // Must be vehicle number
     private Long vehicleId;
 
     @Column(name = "vehicle_type")

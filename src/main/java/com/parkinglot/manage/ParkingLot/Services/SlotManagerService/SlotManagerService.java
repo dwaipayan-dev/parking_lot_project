@@ -189,6 +189,12 @@ public class SlotManagerService {
 
     @Transactional
     public ParkingTicket confirmSlot(Vehicle vehicle) {
+        // Check if ticket already has been made by previous call
+        Optional<ParkingTicket> existing = ticketRepository.findByVehicleId(vehicle.getVehicleId());
+        if (existing.isPresent()) {
+            ParkingTicket existingTicket = existing.get();
+            return existingTicket;
+        }
         Slot cacheKey = slotMap.removeLast(SlotStatus.EMPTY.toString());
         Slot targetSlot = checkIfSlotPresent(cacheKey.getRow(), cacheKey.getCol());
         // If cacheKey row and col is not found then resonse would be try again message.
